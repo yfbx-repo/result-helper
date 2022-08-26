@@ -54,8 +54,8 @@ ActivityResultContracts 提供的默认协议类：
 |GetContent()|String(文件类型)|Uri|获取单个文件|
 |GetMultipleContents()|String(文件类型)|List\<Uri\>|获取多个文件|
 |CreateDocument()|String(文件名)|Uri|创建文件|
-|OpenDocument()|String[](mime type)|Uri|打开文件|
-|OpenMultipleDocuments()|String[](mime type)|List\<Uri\>|打开多个文件|
+|OpenDocument()|Array\<String\>(mime type)|Uri|打开文件|
+|OpenMultipleDocuments()|Array\<String\>(mime type)|List\<Uri\>|打开多个文件|
 |OpenDocumentTree()|Uri|Uri|打开文件目录|
 |PickContact()|null|Uri|选择联系人|
 
