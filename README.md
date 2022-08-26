@@ -3,8 +3,8 @@
 [![License](https://img.shields.io/github/license/yfbx-repo/result-helper)](https://mit-license.org/)
 [![](https://img.shields.io/badge/release-1.0.0-blue.svg)](https://github.com/yfbx-repo/result-helper/releases)
 
-使用新API`registerForActivityResult`处理跳转返回.
-解决 `LifecycleOwners must call register before they are STARTED.` 问题.    
+使用新API`registerForActivityResult`处理跳转返回.    
+解决 `LifecycleOwners must call register before they are STARTED.` 问题.        
 
 ### 一、使用方法
 ```
@@ -54,8 +54,8 @@ ActivityResultContracts 提供的默认协议类：
 |GetContent()|String(文件类型)|Uri|获取单个文件|
 |GetMultipleContents()|String(文件类型)|List<Uri>|获取多个文件|
 |CreateDocument()|String(文件名)|Uri|创建文件|
-|OpenDocument()|Array<String>(mime type)|Uri|打开文件|
-|OpenMultipleDocuments()|Array<String>(mime type)|List<Uri>|打开多个文件|
+|OpenDocument()|String[](mime type)|Uri|打开文件|
+|OpenMultipleDocuments()|String[](mime type)|List<Uri>|打开多个文件|
 |OpenDocumentTree()|Uri|Uri|打开文件目录|
 |PickContact()|null|Uri|选择联系人|
 
@@ -73,8 +73,8 @@ fun <I, O> ComponentActivity.registerForResult(
 }
 ```
 
-注意，此方法未关联生命周期，拿到`ActivityResultLauncher`后，需要手动调用`unregister`解除注册.    
-可以在生命周期onDestroy时解除注册，也可以再写一个扩展，在结果回调之后立即解除注册：
+注意，此方法未关联生命周期，拿到`ActivityResultLauncher`后，需要手动调用`unregister`解除注册.        
+可以在生命周期onDestroy时解除注册，也可以再写一个扩展，在结果回调之后立即解除注册：    
 
 ```
 fun <I, O> Context.start(
