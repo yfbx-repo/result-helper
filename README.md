@@ -1,9 +1,9 @@
-# permission-helper
-[![](https://jitpack.io/v/yfbx-repo/permission-helper.svg)](https://jitpack.io/#yfbx-repo/permission-helper)
-[![License](https://img.shields.io/github/license/yfbx-repo/permission-helper)](https://mit-license.org/)
-[![](https://img.shields.io/badge/release-1.0.0-blue.svg)](https://github.com/yfbx-repo/permission-helper/releases)    
+# result-helper
+[![](https://jitpack.io/v/yfbx-repo/result-helper.svg)](https://jitpack.io/#yfbx-repo/result-helper)
+[![License](https://img.shields.io/github/license/yfbx-repo/result-helper)](https://mit-license.org/)
+[![](https://img.shields.io/badge/release-1.0.0-blue.svg)](https://github.com/yfbx-repo/result-helper/releases)
 
-使用新API`registerForActivityResult`进行权限请求.    
+使用新API`registerForActivityResult`处理跳转返回.
 解决 `LifecycleOwners must call register before they are STARTED.` 问题.    
 
 ### 一、使用方法
@@ -14,24 +14,51 @@ repositories {
 
 
 dependencies {
-    implementation 'com.github.yfbx-repo:permission-helper:1.0.0'
+    implementation 'com.github.yfbx-repo:result-helper:1.0.0'
 }
 ```
 
 ```
-private fun requestCamera() {
-   require(Manifest.permission.CAMERA) {
-       onGrant {
-           //获得授权
-       }
+/**
+ * Activity 跳转
+ */
+private fun startTestActivity() {
+    start<TestActivity> {
+        putExtra("key", "value")
 
-       onDeny {
-           //拒绝授权
-       }
-   }
+        //onActivityResult
+        onResult { result ->
+            val msg = result.data?.getStringExtra("data")
+            Toast.makeText(this@MainActivity, msg, Toast.LENGTH_LONG).show()
+        }
+    }
+}
+
+/**
+ * 拍照
+ */
+private fun startCamera() {
+    start(null, ActivityResultContracts.TakePicturePreview()) {
+        imageView.setImageBitmap(it)
+    }
 }
 
 ```
+ActivityResultContracts 提供的默认协议类：
+|协议类|入参|返回|作用|
+|---|---|---|---|
+|StartActivityForResult()|Intent|ActivityResult|通用协议|
+|TakePicturePreview()|null|Bitmap|拍照|
+|TakePicture()|Uri|Boolean|拍照|
+|TakeVideo()|Uri|Bitmap|拍视频|
+|GetContent()|String(文件类型)|Uri|获取单个文件|
+|GetMultipleContents()|String(文件类型)|List<Uri>|获取多个文件|
+|CreateDocument()|String(文件名)|Uri|创建文件|
+|OpenDocument()|Array<String>(mime type)|Uri|打开文件|
+|OpenMultipleDocuments()|Array<String>(mime type)|List<Uri>|打开多个文件|
+|OpenDocumentTree()|Uri|Uri|打开文件目录|
+|PickContact()|null|Uri|选择联系人|
+
 
 ### 二、核心代码
 ```
@@ -47,69 +74,20 @@ fun <I, O> ComponentActivity.registerForResult(
 ```
 
 注意，此方法未关联生命周期，拿到`ActivityResultLauncher`后，需要手动调用`unregister`解除注册.    
-可以再写一个扩展，在结果回调之后立即解除注册：
+可以在生命周期onDestroy时解除注册，也可以再写一个扩展，在结果回调之后立即解除注册：
 
 ```
-fun ComponentActivity.registerForPermissions(callback: PermissionsCallback): ActivityResultLauncher<Array<out String>> {
-    var launcher: ActivityResultLauncher<Array<out String>>? = null
-    launcher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-            callback.invoke(it)
-            //回调之后立即解除注册
-            launcher?.unregister()
-        }
-    return launcher
-}
-```
-
-### 三、由于隐私合规等问题，可以进一步封装
-```
-
-/**
- * 1. 请求权限之前，说明权限用途
- * 2. 请求权限
- * 3. 权限拒绝后，提示功能不可用
- */
-fun Context.require(
-    vararg permissions: String,
-    tip: String,
-    alert: String,
-    callback: VoidCallback
+fun <I, O> Context.start(
+    input: I,
+    contract: ActivityResultContract<I, O>,
+    callback: ActivityResultCallback<O>
 ) {
-    showTipDialog(tip) {
-        if (it) {
-            require(*permissions) {
-                onGrant {
-                    callback.invoke()
-                }
-                onDeny {
-                    showAlertDialog(alert)
-                }
-            }
-        }
+    require(this is ComponentActivity) { "Context must be ComponentActivity" }
+    var launcher: ActivityResultLauncher<I>? = null
+    launcher = registerForResult(contract) {
+        callback.onActivityResult(it)
+        launcher?.unregister()
     }
+    launcher.launch(input)
 }
-```
-
-可以在单独文件中统一管理全局权限请求
-```
-
-/**
- * 请求相机权限
- */
-fun Context.requireCamera(callback: () -> Unit) = require(
-    Manifest.permission.CAMERA,
-    tip = "我们需要使用您的相机，以实现拍照上传功能",
-    alert = "未获得授权，相机不可用",
-    callback = callback
-)
-
-```
-
-这样，实际使用时，只需要关心获得授权的逻辑
-
-```
- private fun takePhoto() = requireCamera {
-    //调用相机
- }
 ```
