@@ -58,6 +58,8 @@ ActivityResultContracts 提供的默认协议类：
 |OpenMultipleDocuments()|Array\<String\>(mime type)|List\<Uri\>|打开多个文件|
 |OpenDocumentTree()|Uri|Uri|打开文件目录|
 |PickContact()|null|Uri|选择联系人|
+|RequestPermission()|String|Boolean|请求权限|
+|RequestPermission()|Array\<String\>|Map\<String,Boolean\>|请求多个权限|
 
 
 ### 二、核心代码
